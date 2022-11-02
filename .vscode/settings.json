@@ -5,11 +5,5 @@
     "source.fixAll": true,
     "source.organizeImports": true
   },
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "files.associations": {
-    // "*.css": "tailwindcss"
-  },
-  "tailwindCSS.includeLanguages": {
-    "plaintext": "html"
-  }
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

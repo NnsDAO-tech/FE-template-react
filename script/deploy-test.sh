@@ -3,7 +3,10 @@ set -eu
 set -o pipefail
 # set +e
 
-export canisterType=${1:-online}
+export canisterType=${1:-test}
 # canister=${2:-market}
 echo "Deploy ${canisterType} canister"
-dfx deploy
+# build test
+npm run build-test
+# install code
+dfx canister install --all

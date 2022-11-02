@@ -1,28 +1,30 @@
 import react from '@vitejs/plugin-react';
-import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig } from 'vite';
+import { readFileSync, writeFileSync } from 'fs';
+import * as path from 'path';
+import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ command, mode }) => {
-  const prodEnv = mode === 'production' && process.env.canisterType === 'online';
-  console.log('command,mode', command, mode, process.env.canisterType, prodEnv);
+  const isProdCanister = mode === 'prod';
+  const env = loadEnv(isProdCanister ? 'prod' : 'developement', path.resolve('env'), '');
+  console.log('command,mode', command, mode);
+  // rewrite prod canister_ids
+  const canisterJsonPath = path.resolve('canister_ids.json');
+  const canisterJson = JSON.parse(readFileSync(canisterJsonPath).toString());
+  canisterJson.assets.ic = env.__APP__canister_id;
+  writeFileSync(canisterJsonPath, JSON.stringify(canisterJson));
+
   return {
     publicDir: 'src/public',
     envDir: 'env',
-    envPrefix: ['VITE_', 'DEV_', 'TEST_'],
-    plugins: (plugin => {
-      if (prodEnv) {
-        // @ts-ignore
-        plugin.push(
-          // @ts-ignore
-          visualizer({
-            open: true,
-            gzipSize: true,
-            brotliSize: true,
-          })
-        );
-      }
-      return plugin;
-    })([react()]),
+    envPrefix: ['VITE_', '__APP__'],
+    plugins: [
+      react(),
+      // visualizer({
+      //   open: true,
+      //   gzipSize: true,
+      //   brotliSize: true,
+      // })
+    ],
     // resolve: {
     //   alias: {
     //     // Here we tell Vite the "fake" modules that we want to define
@@ -38,8 +40,8 @@ export default defineConfig(({ command, mode }) => {
       minify: 'terser',
       terserOptions: {
         compress: {
-          drop_console: prodEnv,
-          drop_debugger: prodEnv,
+          drop_console: isProdCanister,
+          drop_debugger: isProdCanister,
         },
       },
       assetsDir: 'assets',
@@ -56,19 +58,17 @@ export default defineConfig(({ command, mode }) => {
       fs: {
         strict: false,
       },
-      proxy: {
-        '/api/v2': {
-          target: 'https://ic0.app',
-          changeOrigin: true,
-          rewrite: path => path.replace(/^api\//, '/api/v2/canister'),
-        },
-      },
+      // proxy: {
+      //   '/api/v2': {
+      //     target: 'https://ic0.app',
+      //     changeOrigin: true,
+      //     rewrite: path => path.replace(/^api\//, '/api/v2/canister'),
+      //   },
+      // },
     },
     define: {
       // dfx rely on this
-      'process.env': {
-        canisterType: process.env.canisterType || 'online',
-      },
+      'process.env': {},
     },
   };
 });

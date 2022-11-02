@@ -1,4 +1,3 @@
 export const isDev = import.meta.env.DEV;
 
-// deploy test canister
-export const isTestCanister = process.env.canisterType === 'test';
+export const isTestCanister = import.meta.env.__APP__canister_type === 'test';
